@@ -1,0 +1,1171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Code-SandBox Live Editor - Advanced online code editor with real-time preview, device simulation, and collaborative features">
+    <meta name="keywords" content="code editor, live preview, HTML editor, CSS editor, JavaScript editor, web development, sandbox environment">
+    <meta name="author" content="Code-SandBox">
+    <meta property="og:title" content="Code-SandBox Live Editor">
+    <meta property="og:description" content="Advanced online code editor with real-time preview and device simulation">
+    <meta property="og:url" content="https://code-sandbox.pages.dev">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary_large_image">
+    <title>Code-SandBox Live Editor - Advanced Online Code Editor with Real-Time Preview</title>
+    <link rel="canonical" href="https://code-sandbox.pages.dev">
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #2b5876, #4e4376);
+            color: #f0f0f0;
+            overflow: hidden;
+        }
+        
+        .header {
+            padding: 15px;
+            background-color: rgba(33, 33, 38, 0.9);
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo-icon {
+            font-size: 24px;
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            border-radius: 8px;
+            padding: 5px;
+        }
+        
+        .logo-text {
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(to right, #00b4db, #00c9ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .user-counter {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 6px 10px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .device-switcher {
+            display: flex;
+            background-color: #252526;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-right: 10px;
+            border: 1px solid #3e3e42;
+        }
+        
+        .device-btn {
+            padding: 6px 12px;
+            background: none;
+            border: none;
+            color: #cccccc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .device-btn:hover {
+            background-color: #2d2d30;
+        }
+        
+        .device-btn.active {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: white;
+        }
+        
+        .download-buttons {
+            display: flex;
+            gap: 5px;
+            margin-left: 10px;
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, #0e639c, #0078d4);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            background: linear-gradient(135deg, #1177bb, #006cbe);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .download-btn {
+            background: linear-gradient(135deg, #388e3c, #2e7d32);
+        }
+        
+        .download-btn:hover {
+            background: linear-gradient(135deg, #4caf50, #388e3c);
+        }
+        
+        .clear-btn {
+            background: linear-gradient(135deg, #d32f2f, #b71c1c);
+        }
+        
+        .clear-btn:hover {
+            background: linear-gradient(135deg, #f44336, #d32f2f);
+        }
+        
+        .container {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        .code-panels {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #3e3e42;
+            min-width: 0;
+        }
+        
+        .code-tabs {
+            display: flex;
+            background-color: #252526;
+            border-bottom: 1px solid #3e3e42;
+        }
+        
+        .code-tab {
+            padding: 10px 15px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border-right: 1px solid #3e3e42;
+            color: #cccccc;
+            transition: all 0.2s ease;
+        }
+        
+        .code-tab:hover {
+            background-color: #2d2d30;
+        }
+        
+        .code-tab.active {
+            background: linear-gradient(135deg, #1e1e1e, #2d2d30);
+            color: white;
+            border-bottom: 2px solid #007acc;
+        }
+        
+        .editor-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .editor-panel {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .editor-panel.active {
+            display: flex;
+        }
+        
+        .panel-header {
+            padding: 10px 15px;
+            background-color: #252526;
+            border-bottom: 1px solid #3e3e42;
+            font-size: 13px;
+            font-weight: 600;
+            color: #cccccc;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .editor {
+            flex: 1;
+            padding: 15px;
+            overflow: auto;
+            font-family: 'Fira Code', 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 4;
+            -moz-tab-size: 4;
+            white-space: pre;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            resize: none;
+            border-radius: 0 0 0 8px;
+        }
+        
+        .preview-container {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            background: rgba(45, 45, 48, 0.8);
+            padding: 20px;
+            overflow: auto;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+        
+        .preview-iframe-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .preview-iframe-container.pc-view {
+            width: 100%;
+            height: 100%;
+            max-height: 90vh;
+        }
+        
+        .preview-iframe-container.mobile-view {
+            width: 375px;
+            height: 667px;
+            border: 10px solid #1a1a1a;
+            border-top-width: 50px;
+            border-bottom-width: 50px;
+        }
+        
+        .mobile-frame-header {
+            position: absolute;
+            top: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 6px;
+            background: #333;
+            border-radius: 3px;
+        }
+        
+        #preview {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background-color: white;
+        }
+        
+        .tag { color: #569cd6; }
+        .attribute { color: #9cdcfe; }
+        .value { color: #ce9178; }
+        .comment { color: #6a9955; font-style: italic; }
+        .css-selector { color: #d7ba7d; }
+        .css-property { color: #9cdcfe; }
+        .css-value { color: #ce9178; }
+        .js-keyword { color: #569cd6; }
+        .js-string { color: #ce9178; }
+        .js-comment { color: #6a9955; }
+        .js-function { color: #dcdcaa; }
+        
+        .status-bar {
+            padding: 8px 15px;
+            background: linear-gradient(90deg, #007acc, #0062a3);
+            font-size: 12px;
+            display: flex;
+            justify-content: space-between;
+            color: white;
+        }
+        
+        .error-line {
+            background-color: rgba(255, 0, 0, 0.1);
+            position: relative;
+        }
+        
+        .error-line::after {
+            content: '⚠️';
+            position: absolute;
+            right: 5px;
+            top: 2px;
+            font-size: 12px;
+        }
+        
+        .device-info {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+        
+        .firebase-status {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+        }
+        
+        .firebase-connected {
+            background-color: #4caf50;
+        }
+        
+        .firebase-disconnected {
+            background-color: #f44336;
+        }
+        
+        @media (max-width: 1200px) {
+            .container {
+                flex-direction: column;
+            }
+            .code-panels {
+                border-right: none;
+                border-bottom: 1px solid #3e3e42;
+            }
+            .preview-container {
+                padding: 10px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 10px;
+            }
+            .header-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            .device-switcher, .download-buttons {
+                margin: 5px 0;
+            }
+        }
+        
+        /* Debug info */
+        .debug-info {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #0f0;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">
+            <div class="logo-icon">🧪</div>
+            <div class="logo-text">Code-SandBox Live Editor</div>
+        </div>
+        <div class="header-controls">
+            <div class="user-counter" id="user-counter">
+                <span>👁</span> <span id="user-count">0</span> users
+            </div>
+            <div class="device-switcher">
+                <button class="device-btn active" id="pc-preview-btn">
+                    <span>🖥️</span> PC
+                </button>
+                <button class="device-btn" id="mobile-preview-btn">
+                    <span>📱</span> Mobile
+                </button>
+            </div>
+            <div class="download-buttons">
+                <button class="btn download-btn" id="download-html" title="Download HTML">
+                    <span>↓</span> HTML
+                </button>
+                <button class="btn download-btn" id="download-css" title="Download CSS">
+                    <span>↓</span> CSS
+                </button>
+                <button class="btn download-btn" id="download-js" title="Download JavaScript">
+                    <span>↓</span> JS
+                </button>
+            </div>
+            <button class="btn" id="format-btn">Format</button>
+            <button class="btn clear-btn" id="clear-btn">Clear</button>
+            <button class="btn" id="debug-btn" style="background: #666;">Debug</button>
+        </div>
+    </div>
+    
+    <div class="container">
+        <div class="code-panels">
+            <div class="code-tabs">
+                <div class="code-tab active" data-tab="html">HTML</div>
+                <div class="code-tab" data-tab="css">CSS</div>
+                <div class="code-tab" data-tab="js">JavaScript</div>
+            </div>
+            
+            <div class="editor-container">
+                <div class="editor-panel active" id="html-panel">
+                    <div class="panel-header">
+                        <span>HTML Editor</span>
+                        <span class="line-info">Line: 1, Column: 1</span>
+                    </div>
+                    <textarea id="html-editor" class="editor" spellcheck="false"></textarea>
+                </div>
+                
+                <div class="editor-panel" id="css-panel">
+                    <div class="panel-header">
+                        <span>CSS Editor</span>
+                        <span class="line-info">Line: 1, Column: 1</span>
+                    </div>
+                    <textarea id="css-editor" class="editor" spellcheck="false"></textarea>
+                </div>
+                
+                <div class="editor-panel" id="js-panel">
+                    <div class="panel-header">
+                        <span>JavaScript Editor</span>
+                        <span class="line-info">Line: 1, Column: 1</span>
+                    </div>
+                    <textarea id="js-editor" class="editor" spellcheck="false"></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <div class="preview-iframe-container pc-view" id="preview-container">
+                <div class="mobile-frame-header" id="mobile-frame" style="display: none;"></div>
+                <iframe id="preview" title="Live code preview"></iframe>
+                <div class="device-info" id="device-info">PC View - 100%</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="status-bar">
+        <span>Code-SandBox Live Editor | HTML | CSS | JS | Real-time Preview</span>
+    </div>
+
+    <div class="debug-info" id="debug-info"></div>
+
+    <script>
+        // Debug mode flag
+        let debugMode = false;
+        const debugInfo = document.getElementById('debug-info');
+        const debugBtn = document.getElementById('debug-btn');
+        
+        // Toggle debug info
+        debugBtn.addEventListener('click', function() {
+            debugMode = !debugMode;
+            debugInfo.style.display = debugMode ? 'block' : 'none';
+            debugBtn.style.background = debugMode ? '#4caf50' : '#666';
+            logDebug('Debug mode ' + (debugMode ? 'enabled' : 'disabled'));
+        });
+        
+        function logDebug(message) {
+            if (debugMode) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugInfo.innerHTML += `[${timestamp}] ${message}<br>`;
+                debugInfo.scrollTop = debugInfo.scrollHeight;
+            }
+            console.log(message);
+        }
+        
+        // Firebase configuration and initialization
+        const firebaseConfig = {
+            apiKey: "AIzaSyATI_AQI4SGNhCmErcRqUhmCUY95aixG7E",
+            authDomain: "auto-bot-d9a8c.firebaseapp.com",
+            projectId: "auto-bot-d9a8c",
+            storageBucket: "auto-bot-d9a8c.firebasestorage.app",
+            messagingSenderId: "885545261511",
+            appId: "1:885545261511:web:d303e8084303370cb5a1e2",
+            measurementId: "G-CXL6ETGNW2"
+        };
+
+        // Initialize Firebase
+        let app;
+        let db;
+        
+        try {
+            app = firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            logDebug('Firebase initialized successfully');
+        } catch (error) {
+            logDebug('Firebase initialization error: ' + error.message);
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            logDebug('DOM fully loaded and parsed');
+            
+            // Get all DOM elements
+            const htmlEditor = document.getElementById('html-editor');
+            const cssEditor = document.getElementById('css-editor');
+            const jsEditor = document.getElementById('js-editor');
+            const preview = document.getElementById('preview');
+            const formatBtn = document.getElementById('format-btn');
+            const clearBtn = document.getElementById('clear-btn');
+            const status = document.getElementById('status');
+            const firebaseStatus = document.getElementById('firebase-status');
+            const codeTabs = document.querySelectorAll('.code-tab');
+            const editorPanels = document.querySelectorAll('.editor-panel');
+            const lineInfoElements = document.querySelectorAll('.line-info');
+            const pcPreviewBtn = document.getElementById('pc-preview-btn');
+            const mobilePreviewBtn = document.getElementById('mobile-preview-btn');
+            const previewContainer = document.getElementById('preview-container');
+            const mobileFrame = document.getElementById('mobile-frame');
+            const deviceInfo = document.getElementById('device-info');
+            const userCounter = document.getElementById('user-count');
+            const downloadHtmlBtn = document.getElementById('download-html');
+            const downloadCssBtn = document.getElementById('download-css');
+            const downloadJsBtn = document.getElementById('download-js');
+            
+            // Verify all elements are found
+            const elements = {
+                htmlEditor, cssEditor, jsEditor, preview, formatBtn, clearBtn, 
+                pcPreviewBtn, mobilePreviewBtn, previewContainer, mobileFrame,
+                deviceInfo, userCounter, downloadHtmlBtn, downloadCssBtn, downloadJsBtn
+            };
+            
+            for (const [name, element] of Object.entries(elements)) {
+                if (!element) {
+                    logDebug(`ERROR: Element ${name} not found`);
+                } else {
+                    logDebug(`Element ${name} found successfully`);
+                }
+            }
+            
+            // Default content
+            htmlEditor.value = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code-SandBox Demo</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(120deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 30px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        nav {
+            display: flex;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            margin-bottom: 30px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        nav a {
+            color: #0083b0;
+            padding: 18px 25px;
+            text-decoration: none;
+            text-align: center;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        nav a:hover {
+            background: #0083b0;
+            color: white;
+        }
+        .main {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+        .card {
+            flex: 1;
+            min-width: 300px;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        .card h2 {
+            color: #0083b0;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #00b4db;
+            padding-bottom: 10px;
+        }
+        footer {
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            text-align: center;
+            padding: 1.5rem;
+            border-radius: 12px;
+        }
+        @media screen and (max-width: 768px) {
+            nav {
+                flex-direction: column;
+            }
+            .main {
+                flex-direction: column;
+            }
+            body {
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Code-SandBox Live Editor</h1>
+            <p>Welcome to the advanced online code editor with real-time preview</p>
+        </header>
+        
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">Features</a>
+            <a href="#">Examples</a>
+            <a href="#">Documentation</a>
+        </nav>
+        
+        <div class="main">
+            <div class="card">
+                <h2>Real-time Preview</h2>
+                <p>See your changes instantly as you code with our live preview feature.</p>
+                <p>No need to refresh the page - your updates appear immediately.</p>
+            </div>
+            <div class="card">
+                <h2>Device Simulation</h2>
+                <p>Test your responsive designs with our PC and mobile device previews.</p>
+                <p>Perfect for ensuring your website looks great on all screen sizes.</p>
+            </div>
+            <div class="card">
+                <h2>Export Your Work</h2>
+                <p>Download your HTML, CSS, and JavaScript files with a single click.</p>
+                <p>Your code is always accessible and portable.</p>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Created with Code-SandBox Live Editor | &copy; 2023</p>
+        </footer>
+    </div>
+</body>
+</html>`;
+            
+            cssEditor.value = `/* Add your CSS styles here */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    margin: 0;
+    padding: 20px;
+    background-color: #f5f5f5;
+}
+
+h1 {
+    color: #0083b0;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+/* Responsive design example */
+@media screen and (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+}
+
+/* Animation example */
+.card {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+}`;
+            
+            jsEditor.value = `document.addEventListener('DOMContentLoaded', function() {
+    console.log('Code-SandBox Live Editor loaded successfully');
+    
+    // Example interactive feature
+    const cards = document.querySelectorAll('.card');
+    
+    cards.forEach(card => {
+        card.addEventListener('click', function() {
+            this.style.backgroundColor = this.style.backgroundColor === 'rgb(240, 250, 255)' ? '#fff' : '#f0faff';
+        });
+    });
+    
+    // Mobile menu example
+    const menuBtn = document.createElement('button');
+    menuBtn.textContent = '☰ Menu';
+    menuBtn.style.display = 'none';
+    menuBtn.style.margin = '10px auto';
+    menuBtn.style.padding = '12px 20px';
+    menuBtn.style.backgroundColor = '#0083b0';
+    menuBtn.style.color = 'white';
+    menuBtn.style.border = 'none';
+    menuBtn.style.borderRadius = '6px';
+    menuBtn.style.cursor = 'pointer';
+    menuBtn.style.fontSize = '16px';
+    
+    document.querySelector('nav').prepend(menuBtn);
+    
+    // Show menu button on mobile
+    function checkScreenSize() {
+        if (window.innerWidth <= 768) {
+            menuBtn.style.display = 'block';
+            document.querySelectorAll('nav a').forEach(link => {
+                link.style.display = 'none';
+            });
+            document.querySelector('nav a').style.display = 'block';
+        } else {
+            menuBtn.style.display = 'none';
+            document.querySelectorAll('nav a').forEach(link => {
+                link.style.display = 'block';
+            });
+        }
+    }
+    
+    // Initial check
+    checkScreenSize();
+    
+    // Listen for resize events
+    window.addEventListener('resize', checkScreenSize);
+    
+    // Toggle menu on button click
+    menuBtn.addEventListener('click', function() {
+        document.querySelectorAll('nav a').forEach(link => {
+            link.style.display = link.style.display === 'block' ? 'none' : 'block';
+        });
+    });
+});`;
+            
+            // Firestore user counter setup
+            function setupUserCounter() {
+                if (!db) {
+                    logDebug('Firestore not available for user counter');
+                    return;
+                }
+                
+                // Check if it's a new session
+                if (!sessionStorage.getItem('sessionActive')) {
+                    // This is a new user/session
+                    logDebug("New session detected. Adding to counter...");
+                    
+                    // Create a new document in the 'visits' collection
+                    // This will trigger the Cloud Function to increment the counter
+                    db.collection('visits').add({
+                        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+                        userAgent: navigator.userAgent,
+                        page: window.location.href
+                    }).catch((error) => {
+                        logDebug("Error adding visit document: " + error);
+                        status.textContent = 'Error counting user';
+                        firebaseStatus.className = 'firebase-status firebase-disconnected';
+                    });
+                    
+                    // Mark this session as active
+                    sessionStorage.setItem('sessionActive', 'true');
+                }
+
+                // Listen for real-time updates to the counter document
+                db.collection('stats').doc('visitsCounter')
+                .onSnapshot((doc) => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        const totalVisits = data.totalVisits;
+                        logDebug("Current total visits: " + totalVisits);
+                        // Update the counter on your webpage
+                        userCounter.textContent = totalVisits.toLocaleString();
+                        status.textContent = 'Connected to Firestore | Live user count updated';
+                        firebaseStatus.className = 'firebase-status firebase-connected';
+                    } else {
+                        logDebug("No counter document found!");
+                        status.textContent = 'Connected to Firestore | Counter not initialized';
+                        firebaseStatus.className = 'firebase-status firebase-disconnected';
+                    }
+                }, (error) => {
+                    logDebug("Error listening to counter: " + error);
+                    status.textContent = 'Error connecting to Firestore';
+                    firebaseStatus.className = 'firebase-status firebase-disconnected';
+                });
+            }
+
+            // Initialize user counter
+            setupUserCounter();
+            
+            // Tab switching
+            codeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const tabName = tab.getAttribute('data-tab');
+                    logDebug(`Switching to ${tabName} tab`);
+                    
+                    // Update active tab
+                    codeTabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    // Show corresponding editor
+                    editorPanels.forEach(panel => panel.classList.remove('active'));
+                    document.getElementById(`${tabName}-panel`).classList.add('active');
+                });
+            });
+            
+            // Device preview switching
+            pcPreviewBtn.addEventListener('click', () => {
+                logDebug("Switching to PC view");
+                switchToPCView();
+            });
+            
+            mobilePreviewBtn.addEventListener('click', () => {
+                logDebug("Switching to Mobile view");
+                switchToMobileView();
+            });
+            
+            function switchToPCView() {
+                previewContainer.classList.remove('mobile-view');
+                previewContainer.classList.add('pc-view');
+                mobileFrame.style.display = 'none';
+                deviceInfo.textContent = 'PC View - 100%';
+                
+                pcPreviewBtn.classList.add('active');
+                mobilePreviewBtn.classList.remove('active');
+            }
+            
+            function switchToMobileView() {
+                previewContainer.classList.remove('pc-view');
+                previewContainer.classList.add('mobile-view');
+                mobileFrame.style.display = 'block';
+                deviceInfo.textContent = 'Mobile View - 375x667';
+                
+                mobilePreviewBtn.classList.add('active');
+                pcPreviewBtn.classList.remove('active');
+            }
+            
+            // Download functionality
+            downloadHtmlBtn.addEventListener('click', () => {
+                logDebug("Downloading HTML file");
+                downloadFile(htmlEditor.value, 'index.html', 'text/html');
+                status.textContent = 'Connected to Firestore | HTML file downloaded';
+            });
+            
+            downloadCssBtn.addEventListener('click', () => {
+                logDebug("Downloading CSS file");
+                downloadFile(cssEditor.value, 'styles.css', 'text/css');
+                status.textContent = 'Connected to Firestore | CSS file downloaded';
+            });
+            
+            downloadJsBtn.addEventListener('click', () => {
+                logDebug("Downloading JS file");
+                downloadFile(jsEditor.value, 'script.js', 'text/javascript');
+                status.textContent = 'Connected to Firestore | JavaScript file downloaded';
+            });
+            
+            function downloadFile(content, fileName, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 0);
+            }
+            
+            // Update preview with debouncing (100ms)
+            let updateTimeout;
+            function schedulePreviewUpdate() {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updatePreview, 100);
+            }
+            
+            // Add event listeners to all editors
+            [htmlEditor, cssEditor, jsEditor].forEach(editor => {
+                editor.addEventListener('input', schedulePreviewUpdate);
+                
+                // Track cursor position
+                editor.addEventListener('keyup', function() {
+                    updateLineInfo(editor);
+                });
+                
+                editor.addEventListener('click', function() {
+                    updateLineInfo(editor);
+                });
+                
+                // Tab key support
+                editor.addEventListener('keydown', function(e) {
+                    if (e.key === 'Tab') {
+                        e.preventDefault();
+                        const start = this.selectionStart;
+                        const end = this.selectionEnd;
+                        
+                        // Insert tab
+                        this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+                        
+                        // Move cursor
+                        this.selectionStart = this.selectionEnd = start + 4;
+                        
+                        // Update preview
+                        schedulePreviewUpdate();
+                    }
+                });
+            });
+            
+            // Format code
+            formatBtn.addEventListener('click', function() {
+                logDebug("Formatting code");
+                const activePanel = document.querySelector('.editor-panel.active');
+                let editor;
+                
+                if (activePanel.id === 'html-panel') {
+                    editor = htmlEditor;
+                    editor.value = formatHTML(editor.value);
+                } else if (activePanel.id === 'css-panel') {
+                    editor = cssEditor;
+                    editor.value = formatCSS(editor.value);
+                } else if (activePanel.id === 'js-panel') {
+                    editor = jsEditor;
+                    editor.value = formatJS(editor.value);
+                }
+                
+                schedulePreviewUpdate();
+                status.textContent = 'Connected to Firestore | Code formatted';
+            });
+            
+            // Clear code
+            clearBtn.addEventListener('click', function() {
+                logDebug("Clearing editor");
+                const activePanel = document.querySelector('.editor-panel.active');
+                
+                if (activePanel.id === 'html-panel') {
+                    htmlEditor.value = '';
+                } else if (activePanel.id === 'css-panel') {
+                    cssEditor.value = '';
+                } else if (activePanel.id === 'js-panel') {
+                    jsEditor.value = '';
+                }
+                
+                schedulePreviewUpdate();
+                status.textContent = 'Connected to Firestore | Editor cleared';
+            });
+            
+            // Update line and column info
+            function updateLineInfo(editor) {
+                const cursorPos = editor.selectionStart;
+                const textBeforeCursor = editor.value.substring(0, cursorPos);
+                const lines = textBeforeCursor.split('\n');
+                const lineCount = lines.length;
+                const columnCount = lines[lines.length - 1].length + 1;
+                
+                const activePanel = document.querySelector('.editor-panel.active');
+                const lineInfo = activePanel.querySelector('.line-info');
+                lineInfo.textContent = `Line: ${lineCount}, Column: ${columnCount}`;
+            }
+            
+            // Update preview function - FIXED SCROLLING ISSUE
+            function updatePreview() {
+                try {
+                    const htmlContent = htmlEditor.value;
+                    const cssContent = cssEditor.value;
+                    const jsContent = jsEditor.value;
+                    
+                    // Store current scroll position before updating
+                    const scrollX = preview.contentWindow.scrollX;
+                    const scrollY = preview.contentWindow.scrollY;
+                    
+                    const previewDocument = preview.contentDocument || preview.contentWindow.document;
+                    
+                    // Write the content to the iframe
+                    previewDocument.open();
+                    previewDocument.write(`
+                        <!DOCTYPE html>
+                        <html>
+                        <head>
+                            <meta charset="UTF-8">
+                            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                            <style>${cssContent}</style>
+                        </head>
+                        <body>
+                            ${htmlContent}
+                            <script>${jsContent}<\/script>
+                        </body>
+                        </html>
+                    `);
+                    previewDocument.close();
+                    
+                    // Restore scroll position after a brief delay
+                    setTimeout(() => {
+                        try {
+                            preview.contentWindow.scrollTo(scrollX, scrollY);
+                        } catch (e) {
+                            logDebug("Error restoring scroll position: " + e.message);
+                        }
+                    }, 50);
+                    
+                    status.textContent = 'Connected to Firestore | Preview updated';
+                    firebaseStatus.className = 'firebase-status firebase-connected';
+                    
+                    logDebug("Preview updated successfully");
+                } catch (error) {
+                    logDebug("Error updating preview: " + error.message);
+                    status.textContent = 'Connected to Firestore | Error updating preview';
+                    firebaseStatus.className = 'firebase-status firebase-disconnected';
+                }
+            }
+            
+            // Initial preview update
+            updatePreview();
+            
+            // Formatting functions
+            function formatHTML(html) {
+                // Simple HTML formatting (for demo purposes)
+                let formatted = '';
+                let indentLevel = 0;
+                const lines = html.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    
+                    if (line.startsWith('</')) {
+                        indentLevel--;
+                    }
+                    
+                    formatted += '    '.repeat(indentLevel) + line + '\n';
+                    
+                    if (line.startsWith('<') && !line.startsWith('</') && !line.endsWith('/>')) {
+                        indentLevel++;
+                    }
+                }
+                
+                return formatted;
+            }
+            
+            function formatCSS(css) {
+                // Simple CSS formatting
+                let formatted = '';
+                let indentLevel = 0;
+                const lines = css.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    
+                    if (line.endsWith('}')) {
+                        indentLevel--;
+                    }
+                    
+                    formatted += '    '.repeat(indentLevel) + line + '\n';
+                    
+                    if (line.endsWith('{')) {
+                        indentLevel++;
+                    }
+                }
+                
+                return formatted;
+            }
+            
+            function formatJS(js) {
+                // Simple JS formatting
+                let formatted = '';
+                let indentLevel = 0;
+                const lines = js.split('\n');
+                
+                for (let line of lines) {
+                    line = line.trim();
+                    
+                    if (line.endsWith('}') || line.endsWith(']')) {
+                        indentLevel--;
+                    }
+                    
+                    formatted += '    '.repeat(indentLevel) + line + '\n';
+                    
+                    if (line.endsWith('{') || line.endsWith('[')) {
+                        indentLevel++;
+                    }
+                }
+                
+                return formatted;
+            }
+            
+            // Initialize line info for all editors
+            updateLineInfo(htmlEditor);
+            
+            // Add event listeners to all buttons to verify they work
+            const allButtons = document.querySelectorAll('button');
+            allButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    logDebug(`Button clicked: ${this.textContent.trim()}`);
+                });
+            });
+            
+            logDebug('All event listeners attached successfully');
+        });
+    </script>
+</body>
+</html>
