@@ -13,8 +13,6 @@
     <meta name="twitter:card" content="summary_large_image">
     <title>Code-SandBox Live Editor - Advanced Online Code Editor with Real-Time Preview</title>
     <link rel="canonical" href="https://code-sandbox.pages.dev">
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <style>
         * {
             margin: 0;
@@ -406,9 +404,6 @@
             <div class="logo-text">Code-SandBox Live Editor</div>
         </div>
         <div class="header-controls">
-            <div class="user-counter" id="user-counter">
-                <span>👁</span> <span id="user-count">0</span> users
-            </div>
             <div class="device-switcher">
                 <button class="device-btn active" id="pc-preview-btn">
                     <span>🖥️</span> PC
@@ -507,29 +502,7 @@
             console.log(message);
         }
         
-        // Firebase configuration and initialization
-        const firebaseConfig = {
-            apiKey: "AIzaSyATI_AQI4SGNhCmErcRqUhmCUY95aixG7E",
-            authDomain: "auto-bot-d9a8c.firebaseapp.com",
-            projectId: "auto-bot-d9a8c",
-            storageBucket: "auto-bot-d9a8c.firebasestorage.app",
-            messagingSenderId: "885545261511",
-            appId: "1:885545261511:web:d303e8084303370cb5a1e2",
-            measurementId: "G-CXL6ETGNW2"
-        };
-
-        // Initialize Firebase
-        let app;
-        let db;
         
-        try {
-            app = firebase.initializeApp(firebaseConfig);
-            db = firebase.firestore();
-            logDebug('Firebase initialized successfully');
-        } catch (error) {
-            logDebug('Firebase initialization error: ' + error.message);
-        }
-
         document.addEventListener('DOMContentLoaded', function() {
             logDebug('DOM fully loaded and parsed');
             
